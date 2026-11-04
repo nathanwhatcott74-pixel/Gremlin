@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0D0A14">
+<title>Gremlin</title>
+<style>
+  :root{
+    --night:#0D0A14; --dusk:#221B2E; --ember:#FF8A3D; --bone:#F4F1EA;
+    --coral:#FF7A85; --moss:#9BE15D; --muted:#a79fb5;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--night);color:var(--bone);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  body{display:flex;flex-direction:column;align-items:center;
+    padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
+  .hidden{display:none!important}
+  /* ---------- block screen ---------- */
+  #block{width:100%;max-width:440px;flex:1;display:flex;flex-direction:column;align-items:center}
+  #stageWrap{position:relative;width:100%;margin-top:8px}
+  #stage{width:100%;height:auto;display:block;overflow:visible}
+  #stamp{position:absolute;left:50%;top:62%;transform:translate(-50%,-50%) rotate(-12deg);
+    font-weight:900;font-size:clamp(34px,11vw,56px);letter-spacing:1px;color:var(--coral);
+    border:6px solid var(--coral);border-radius:14px;padding:4px 16px;white-space:nowrap;
+    opacity:0;pointer-events:none;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+  #caption{min-height:52px;margin:6px 0 0;font-size:34px;font-weight:900;text-align:center;letter-spacing:.5px}
+  .btn{appearance:none;border:0;border-radius:16px;font-size:18px;font-weight:700;
+    padding:16px 22px;width:100%;max-width:340px;margin-top:10px;cursor:pointer}
+  .primary{background:var(--ember);color:#1a1208}
+  .ghost{background:var(--dusk);color:var(--bone)}
+  #emergency{margin-top:auto;background:none;border:1px solid #3a3148;color:var(--muted);
+    font-size:13px;padding:10px 14px;border-radius:12px;position:relative;overflow:hidden;width:auto}
+  #emergency .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(255,122,133,.25)}
+  #emergency span{position:relative}
+  /* ---------- home screen ---------- */
+  #home{width:100%;max-width:520px}
+  h1{font-size:34px;margin:8px 0 4px}
+  h2{font-size:20px;margin:28px 0 8px}
+  p,li{line-height:1.5;color:#d8d2e2}
+  .card{background:var(--dusk);border-radius:16px;padding:16px;margin-top:12px}
+  .stat{font-size:44px;font-weight:900;color:var(--ember);line-height:1}
+  .row{display:flex;gap:12px}
+  .row .card{flex:1;margin-top:0}
+  ol{padding-left:20px}
+  code{background:#2e2540;padding:1px 6px;border-radius:6px;font-size:14px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  td{padding:6px 4px;border-bottom:1px solid #2e2540;color:#d8d2e2}
+  label{display:flex;gap:10px;align-items:center;margin-top:10px}
+  input[type=checkbox]{width:20px;height:20px}
+</style>
+</head>
+<body>
+
+<!-- ================= BLOCK SCREEN ================= -->
+<main id="block" class="hidden" aria-live="polite">
+  <div id="stageWrap">
+    <svg id="stage" viewBox="0 0 400 420" aria-hidden="true">
+      <defs>
+        <radialGradient id="gBody" cx="42%" cy="35%" r="70%">
+          <stop offset="0" stop-color="#FFC48A"/><stop offset=".55" stop-color="#FF8F45"/><stop offset="1" stop-color="#E8651F"/>
+        </radialGradient>
+        <radialGradient id="gBelly" cx="50%" cy="35%" r="70%">
+          <stop offset="0" stop-color="#FFF8EC"/><stop offset="1" stop-color="#FBDDB8"/>
+        </radialGradient>
+        <radialGradient id="gEye" cx="40%" cy="35%" r="70%">
+          <stop offset="0" stop-color="#3b3b44"/><stop offset=".6" stop-color="#0b0b10"/><stop offset="1" stop-color="#000"/>
+        </radialGradient>
+        <linearGradient id="gEarIn" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#FFC1CF"/><stop offset="1" stop-color="#F08BA3"/>
+        </linearGradient>
+        <linearGradient id="gIcon" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7B6CF6"/><stop offset="1" stop-color="#E25FA8"/>
+        </linearGradient>
+        <linearGradient id="gWood" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#C98B4E"/><stop offset="1" stop-color="#9C6332"/>
+        </linearGradient>
+        <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="6"/>
+        </filter>
+      </defs>
+
+      <!-- generic app icon (not any real brand) -->
+      <g id="icon" style="transform-box:fill-box;transform-origin:center">
+        <rect x="290" y="40" width="80" height="80" rx="20" fill="#3D4FD1"/>
+        <path d="M318 62 L348 80 L318 98 Z" fill="#fff" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
+      </g>
+
+      <!-- CLOSED sign -->
+      <g id="sign" opacity="0" style="transform-box:fill-box;transform-origin:center top">
+        <line x1="300" y1="30" x2="330" y2="14" stroke="#3a2a1a" stroke-width="3"/>
+        <line x1="360" y1="30" x2="330" y2="14" stroke="#3a2a1a" stroke-width="3"/>
+        <circle cx="330" cy="13" r="4" fill="#3a2a1a"/>
+        <rect x="276" y="30" width="108" height="50" rx="8" fill="url(#gWood)" stroke="#5a3a1c" stroke-width="3"/>
+        <text x="330" y="64" text-anchor="middle" font-size="22" font-weight="900" fill="#3a2410" font-family="-apple-system,Arial Black,sans-serif">CLOSED</text>
+      </g>
+
+      <!-- shadow -->
+      <ellipse id="shadow" cx="170" cy="396" rx="110" ry="14" fill="#000" opacity=".45" filter="url(#soft)"/>
+
+      <!-- THE GREMLIN -->
+      <g transform="translate(20,40)">
+      <g id="g" style="transform-box:fill-box;transform-origin:50% 100%">
+        <!-- feet -->
+        <g id="footL"><ellipse cx="108" cy="345" rx="30" ry="13" fill="#F07A2A"/>
+          <circle cx="94" cy="347" r="3" fill="#FFD0A8"/><circle cx="106" cy="350" r="3" fill="#FFD0A8"/><circle cx="118" cy="347" r="3" fill="#FFD0A8"/></g>
+        <g id="footR" style="transform-box:fill-box;transform-origin:20% 60%"><ellipse cx="192" cy="345" rx="30" ry="13" fill="#F07A2A"/>
+          <circle cx="182" cy="347" r="3" fill="#FFD0A8"/><circle cx="194" cy="350" r="3" fill="#FFD0A8"/><circle cx="206" cy="347" r="3" fill="#FFD0A8"/></g>
+
+        <!-- tall ear (left) -->
+        <g id="earL" style="transform-box:fill-box;transform-origin:70% 100%">
+          <path d="M92 150 C70 100 60 55 58 22 C88 45 118 90 132 132 Z" fill="#FF8F45" stroke="#E0621E" stroke-width="2"/>
+          <path d="M96 140 C80 102 72 70 70 44 C92 64 112 96 122 128 Z" fill="url(#gEarIn)"/>
+          <path d="M84 100 C82 86 80 72 79 60" stroke="#fff" stroke-width="2" opacity=".7" fill="none"/>
+        </g>
+        <!-- floppy ear (right) -->
+        <g id="earR" style="transform-box:fill-box;transform-origin:10% 30%">
+          <path d="M198 120 C228 98 262 100 286 116 C282 134 266 150 246 152 C230 148 214 140 206 140 Z" fill="#FF8F45" stroke="#E0621E" stroke-width="2"/>
+          <path d="M210 124 C232 110 256 112 274 120 C270 132 258 142 244 143 C232 140 220 134 214 134 Z" fill="url(#gEarIn)"/>
+        </g>
+
+        <!-- arms -->
+        <g id="armL" style="transform-box:fill-box;transform-origin:50% 8%">
+          <ellipse cx="62" cy="262" rx="16" ry="34" fill="#F07A2A" transform="rotate(18 62 262)"/>
+        </g>
+        <g id="armR" style="transform-box:fill-box;transform-origin:50% 8%">
+          <ellipse cx="238" cy="262" rx="16" ry="34" fill="#F07A2A" transform="rotate(-18 238 262)"/>
+        </g>
+
+        <!-- body -->
+        <ellipse cx="150" cy="235" rx="100" ry="112" fill="url(#gBody)"/>
+        <ellipse cx="118" cy="168" rx="38" ry="22" fill="#fff" opacity=".18"/>
+        <ellipse id="belly" cx="150" cy="285" rx="66" ry="56" fill="url(#gBelly)"/>
+
+        <!-- hair tuft -->
+        <path d="M140 128 C136 108 140 96 150 86 C148 100 152 108 158 112 C160 100 168 92 180 90 C172 102 172 116 166 130 Z" fill="#A84A14"/>
+
+        <!-- brows -->
+        <g id="brows">
+          <path id="browL" d="M96 160 Q114 150 132 158" stroke="#8A3A10" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <path id="browR" d="M170 156 Q188 148 206 158" stroke="#8A3A10" stroke-width="5" fill="none" stroke-linecap="round"/>
+        </g>
+
+        <!-- eyes -->
+        <g id="eyes">
+          <g id="eyeL"><circle cx="116" cy="190" r="26" fill="url(#gEye)"/>
+            <circle class="hl" cx="106" cy="179" r="9" fill="#fff"/><circle cx="125" cy="201" r="3.5" fill="#fff" opacity=".9"/></g>
+          <g id="eyeR"><circle cx="186" cy="190" r="26" fill="url(#gEye)"/>
+            <circle class="hl" cx="176" cy="179" r="9" fill="#fff"/><circle cx="195" cy="201" r="3.5" fill="#fff" opacity=".9"/></g>
+        </g>
+
+        <!-- cheeks + nose -->
+        <ellipse cx="88" cy="222" rx="14" ry="8" fill="#FF6F6F" opacity=".35"/>
+        <ellipse cx="214" cy="222" rx="14" ry="8" fill="#FF6F6F" opacity=".35"/>
+        <path d="M144 216 Q151 210 158 216 Q151 226 144 216 Z" fill="#6B2A12"/>
+
+        <!-- mouths -->
+        <g id="mSmile">
+          <path d="M126 232 Q148 252 178 228" stroke="#7A2A10" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <path d="M162 241 L168 240 L165 250 Z" fill="#fff" stroke="#c9c2b8" stroke-width=".8"/>
+        </g>
+        <g id="mWide" class="hidden">
+          <path d="M112 228 Q150 292 192 228 Q150 242 112 228 Z" fill="#5A1A1A" stroke="#7A2A10" stroke-width="3"/>
+          <path d="M126 232 L132 244 L138 234 Z" fill="#fff"/><path d="M166 234 L172 244 L178 232 Z" fill="#fff"/>
+        </g>
+        <g id="tShort" class="hidden"><path d="M136 252 Q150 284 166 252 Z" fill="#FF7A95" stroke="#D9506E" stroke-width="2"/></g>
+        <g id="tLong" class="hidden"><path d="M134 252 Q130 318 150 324 Q170 318 168 252 Z" fill="#FF7A95" stroke="#D9506E" stroke-width="2"/>
+          <path d="M151 262 L151 306" stroke="#D9506E" stroke-width="2"/></g>
+        <g id="mFlat" class="hidden"><path d="M130 236 Q150 242 172 234" stroke="#7A2A10" stroke-width="4" fill="none" stroke-linecap="round"/></g>
+
+        <!-- NO paddle (held in right hand) -->
+        <g id="paddle" opacity="0" style="transform-box:fill-box;transform-origin:50% 100%">
+          <rect x="246" y="150" width="8" height="120" rx="3" fill="#9C6332"/>
+          <circle cx="250" cy="140" r="34" fill="#FFD84D" stroke="#2a2010" stroke-width="4"/>
+          <text x="250" y="152" text-anchor="middle" font-size="32" font-weight="900" fill="#2a2010" font-family="-apple-system,Arial Black,sans-serif">NO</text>
+        </g>
+        <!-- thumbs up -->
+        <g id="thumb" opacity="0">
+          <ellipse cx="252" cy="232" rx="16" ry="14" fill="#F07A2A"/>
+          <ellipse cx="256" cy="212" rx="7" ry="13" fill="#F07A2A"/>
+        </g>
+      </g>
+      </g>
+    </svg>
+    <div id="stamp">NOPE</div>
+  </div>
+
+  <div id="caption"></div>
+  <button id="again" class="btn primary hidden">Try again</button>
+  <button id="go" class="btn primary hidden">Go to Instagram</button>
+  <button id="homeBtn" class="btn ghost hidden">Close</button>
+  <button id="emergency" class="hidden" aria-label="Emergency pass, press and hold 5 seconds"><div class="fill"></div><span id="emText">Emergency · hold 5s</span></button>
+</main>
+
+<!-- ================= HOME / SETUP SCREEN ================= -->
+<main id="home" class="hidden">
+  <h1>Gremlin</h1>
+  <p>Personal prototype. Your phone just hired a bouncer.</p>
+
+  <div class="row" style="margin-top:16px">
+    <div class="card"><div class="stat" id="sBlocks">0</div><div>blocks today</div></div>
+    <div class="card"><div class="stat" id="sWalked">0</div><div>walked away today</div></div>
+  </div>
+
+  <button class="btn primary" id="testBtn">Test a block</button>
+
+  <h2>Settings</h2>
+  <div class="card">
+    <label><input type="checkbox" id="optStrong"> Stronger stamp words (SCREW OFF)</label>
+    <label><input type="checkbox" id="optDirect"> Testing mode: "Go" opens Instagram directly (skip the release shortcut)</label>
+  </div>
+
+  <h2>Set up on your iPhone</h2>
+  <div class="card">
+    <p><b>First,</b> open this page in Safari and copy its address from the address bar. You'll paste it in shortcut 2. Make sure it ends with <code>?app=instagram</code>.</p>
+    <p><b>Shortcut 1: "Gremlin Release"</b> (runs when the Gremlin lets you through)</p>
+    <ol>
+      <li>Shortcuts app → <b>Shortcuts</b> tab → <b>+</b>. Name it exactly <code>Gremlin Release</code>.</li>
+      <li>Add action <b>Text</b>, type <code>open</code>.</li>
+      <li>Add action <b>Save File</b>. Turn <b>Ask Where to Save</b> off, set the path to <code>gremlin-grace.txt</code> and turn <b>Overwrite If File Exists</b> on.</li>
+      <li>Add action <b>Open App</b> → Instagram.</li>
+    </ol>
+    <p><b>Shortcut 2: the automation</b> (runs every time Instagram opens)</p>
+    <ol>
+      <li>Shortcuts → <b>Automation</b> tab → <b>+</b> → <b>App</b> → choose Instagram, tick <b>Is Opened</b>, pick <b>Run Immediately</b> → Next → <b>New Blank Automation</b>.</li>
+      <li>Add <b>Get File</b>. Set path <code>gremlin-grace.txt</code> and turn <b>Error If Not Found</b> off.</li>
+      <li>Add <b>Get Details of Files</b> → <b>Last Modified Date</b>.</li>
+      <li>Add <b>Get Time Between Dates</b>: between <i>Last Modified Date</i> and <i>Current Date</i>, in <b>Minutes</b>.</li>
+      <li>Add <b>If</b>: <i>Time Between Dates</i> <b>is less than</b> <code>10</code> → put <b>Stop This Shortcut</b> inside (that's your 10-minute free pass).</li>
+      <li>After <b>End If</b>, add <b>Open URLs</b> with this page's address.</li>
+    </ol>
+    <p>Then open Instagram. The Gremlin should appear. When it gives up, tap <b>Go to Instagram</b>: that runs Shortcut 1, which starts the 10-minute pass and opens Instagram without blocking you again.</p>
+    <p style="color:var(--muted)">I couldn't test these shortcut steps on a real iPhone from here. If a step looks different on your phone, screenshot it and send it over.</p>
+  </div>
+
+  <h2>History</h2>
+  <div class="card"><table id="hist"></table></div>
+  <p style="color:var(--muted);font-size:13px;margin-top:24px">Data stays in this browser on this phone only.</p>
+</main>
+
+<script>
+/* ============ storage (safe if blocked) ============ */
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)) }catch(e){} }
+};
+
+/* ============ config ============ */
+const WEIGHTS = [25,22,18,12,8,5,4,3,2,1];          // chance of N = 1..10 blocks
+const SESSION_EXPIRY_MIN = 15;
+const EMERGENCY_PER_DAY = 2;
+const RELEASE_URL = 'shortcuts://run-shortcut?name=' + encodeURIComponent('Gremlin Release');
+const WORDS_SOFT = ['GO AWAY','SCRAM','BEAT IT','NOPE','DENIED','NICE TRY'];
+const WORDS_STRONG = ['SCREW OFF'];
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function rollN(){
+  let r = Math.random()*WEIGHTS.reduce((a,b)=>a+b,0);
+  for(let i=0;i<WEIGHTS.length;i++){ r -= WEIGHTS[i]; if(r<0) return i+1 }
+  return 1;
+}
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const today = () => new Date().toDateString();
+
+/* ============ log ============ */
+function log(entry){ const l = store.get('gremlin_log', []); l.unshift(entry); store.set('gremlin_log', l.slice(0,300)); }
+function closeSession(outcome){
+  const s = store.get('gremlin_session', null);
+  if(s){ log({t:Date.now(), app:s.app, n:s.n, played:s.played, outcome}); }
+  store.set('gremlin_session', null);
+}
+
+/* ============ character helpers ============ */
+const MOUTHS = ['mSmile','mWide','tShort','tLong','mFlat'];
+function mouth(...show){ MOUTHS.forEach(m => $(m).classList.toggle('hidden', !show.includes(m))); }
+function anim(el, frames, opts){ const a = (typeof el==='string'?$(el):el).animate(frames, Object.assign({fill:'forwards'}, opts)); return a.finished; }
+function resetPose(){
+  ['g','armL','armR','footR','earL','earR','icon','sign','paddle','thumb','eyes','brows'].forEach(id=>{
+    $(id).getAnimations().forEach(a=>a.cancel());
+  });
+  $('sign').setAttribute('opacity','0'); $('paddle').setAttribute('opacity','0'); $('thumb').setAttribute('opacity','0');
+  $('stamp').getAnimations().forEach(a=>a.cancel()); $('stamp').style.opacity = 0;
+  mouth('mSmile');
+}
+function say(t){ $('caption').textContent = t; }
+function shake(){
+  if(reduceMotion) return Promise.resolve();
+  return anim('stageWrap',[{transform:'translate(0,0)'},{transform:'translate(-8px,4px)'},{transform:'translate(7px,-5px)'},{transform:'translate(-5px,3px)'},{transform:'translate(0,0)'}],{duration:320,fill:'none'});
+}
+function blink(){ return anim('eyes',[{transform:'scaleY(1)'},{transform:'scaleY(.1)'},{transform:'scaleY(1)'}],{duration:180,fill:'none'}); }
+$('eyes').style.transformBox='fill-box'; $('eyes').style.transformOrigin='center';
+
+/* ============ gags (silent physical comedy) ============ */
+const pop = () => anim('g',[{transform:'translateY(260px)'},{transform:'translateY(-18px)',offset:.7},{transform:'translateY(0)'}],{duration:520,easing:'ease-out'});
+const showSign = () => { $('sign').setAttribute('opacity','1'); return anim('sign',[{transform:'translateY(-160px) rotate(-20deg)'},{transform:'translateY(0) rotate(4deg)',offset:.75},{transform:'translateY(0) rotate(0)'}],{duration:450,easing:'ease-in'}); };
+
+const GAGS = [
+  // 1. pops up and slaps CLOSED over the icon
+  async () => { say(''); await pop(); await anim('armR',[{transform:'rotate(0)'},{transform:'rotate(-120deg)'}],{duration:220});
+    await showSign(); shake(); haptic(); say('CLOSED.'); await anim('armR',[{transform:'rotate(-120deg)'},{transform:'rotate(0)'}],{duration:250}); await blink(); },
+  // 2. pulls mouth wide, tongue out
+  async () => { $('sign').setAttribute('opacity','1');
+    await Promise.all([anim('armL',[{transform:'rotate(0)'},{transform:'rotate(150deg)'}],{duration:260}), anim('armR',[{transform:'rotate(0)'},{transform:'rotate(-150deg)'}],{duration:260})]);
+    mouth('mWide','tShort'); haptic(); say('Bleh.');
+    await anim('g',[{transform:'rotate(0)'},{transform:'rotate(-4deg)'},{transform:'rotate(4deg)'},{transform:'rotate(0)'}],{duration:700,iterations:2,fill:'none'}); },
+  // 3. stamp slams down with a random word
+  async () => { $('sign').setAttribute('opacity','1');
+    const words = WORDS_SOFT.concat(store.get('opt_strong', true) ? WORDS_STRONG : []);
+    $('stamp').textContent = words[Math.floor(Math.random()*words.length)];
+    await anim('armR',[{transform:'rotate(0)'},{transform:'rotate(-170deg)'}],{duration:240});
+    await anim('stamp',[{opacity:0,transform:'translate(-50%,-50%) rotate(-12deg) scale(3)'},{opacity:1,transform:'translate(-50%,-50%) rotate(-12deg) scale(1)'}],{duration:220,easing:'ease-in'});
+    shake(); haptic(true); say('');
+    await anim('armR',[{transform:'rotate(-170deg)'},{transform:'rotate(0)'}],{duration:300}); await sleep(700); },
+  // 4. head waggle, tongue gets longer
+  async () => { $('sign').setAttribute('opacity','1');
+    await Promise.all([anim('armL',[{transform:'rotate(0)'},{transform:'rotate(150deg)'}],{duration:220}), anim('armR',[{transform:'rotate(0)'},{transform:'rotate(-150deg)'}],{duration:220})]);
+    mouth('mWide','tShort'); await sleep(250); mouth('mWide','tLong'); haptic(); say('Blehhh.');
+    await anim('g',[{transform:'rotate(0)'},{transform:'rotate(-9deg)'},{transform:'rotate(9deg)'},{transform:'rotate(0)'}],{duration:500,iterations:3,fill:'none'}); },
+  // 5. crosses arms, taps foot
+  async () => { $('sign').setAttribute('opacity','1'); mouth('mFlat');
+    await Promise.all([anim('armL',[{transform:'rotate(0)'},{transform:'translate(40px,-6px) rotate(-70deg)'}],{duration:300}), anim('armR',[{transform:'rotate(0)'},{transform:'translate(-40px,-6px) rotate(70deg)'}],{duration:300})]);
+    say('…');
+    for(let i=0;i<4;i++){ await anim('footR',[{transform:'rotate(0)'},{transform:'rotate(-14deg)'},{transform:'rotate(0)'}],{duration:260,fill:'none'}); haptic(); } },
+  // 6. holds up a NO paddle
+  async () => { $('sign').setAttribute('opacity','1'); $('paddle').setAttribute('opacity','1');
+    await Promise.all([anim('paddle',[{transform:'translateY(120px)'},{transform:'translateY(-10px)'},{transform:'translateY(0)'}],{duration:450,easing:'ease-out'}),
+      anim('armR',[{transform:'rotate(0)'},{transform:'rotate(-30deg)'}],{duration:300})]);
+    haptic(); say('No.');
+    await anim('paddle',[{transform:'rotate(0)'},{transform:'rotate(8deg)'},{transform:'rotate(-8deg)'},{transform:'rotate(0)'}],{duration:600,iterations:2,fill:'none'}); },
+  // 7. mouth gets stuck wide, panics, snaps back
+  async () => { $('sign').setAttribute('opacity','1');
+    await Promise.all([anim('armL',[{transform:'rotate(0)'},{transform:'rotate(150deg)'}],{duration:220}), anim('armR',[{transform:'rotate(0)'},{transform:'rotate(-150deg)'}],{duration:220})]);
+    mouth('mWide','tShort'); say('…');
+    await Promise.all([anim('armL',[{transform:'rotate(150deg)'},{transform:'rotate(0)'}],{duration:220}), anim('armR',[{transform:'rotate(-150deg)'},{transform:'rotate(0)'}],{duration:220})]);
+    await anim('g',[{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:140,iterations:6,fill:'none'});
+    say('!!'); mouth('mSmile'); haptic(true);
+    await anim('g',[{transform:'scale(1)'},{transform:'scale(1.06,.94)'},{transform:'scale(1)'}],{duration:260,fill:'none'}); say('…phew.'); await sleep(400); },
+  // 8. holds the icon down while it wiggles away, dragging the gremlin
+  async () => { $('sign').setAttribute('opacity','0'); say('');
+    await anim('armR',[{transform:'rotate(0)'},{transform:'rotate(-120deg)'}],{duration:250});
+    const wig = anim('icon',[{transform:'rotate(0)'},{transform:'rotate(-10deg)'},{transform:'rotate(10deg)'},{transform:'rotate(0)'}],{duration:240,iterations:6,fill:'none'});
+    await sleep(500);
+    await Promise.all([anim('icon',[{transform:'translateX(0)'},{transform:'translateX(-60px)'},{transform:'translateX(-20px)'}],{duration:900}),
+      anim('g',[{transform:'translateX(0)'},{transform:'translateX(-40px)'},{transform:'translateX(-10px)'}],{duration:900}), wig]);
+    haptic(); say('Hngh.'); await sleep(300); },
+  // bench: tries to climb onto the icon and slides off
+  async () => { $('sign').setAttribute('opacity','1');
+    await anim('g',[{transform:'translate(0,0)'},{transform:'translate(60px,-60px) rotate(12deg)'},{transform:'translate(40px,-30px) rotate(20deg)',offset:.7},{transform:'translate(0,0) rotate(0)'}],{duration:1300,easing:'ease-in-out'});
+    haptic(); say('Oof.'); await blink(); },
+];
+
+async function release(){
+  resetPose(); $('sign').setAttribute('opacity','1');
+  await anim('g',[{transform:'scale(1)'},{transform:'scale(1.03,.9)'}],{duration:500,easing:'ease-out'});
+  mouth('mFlat');
+  await anim('sign',[{transform:'translateX(0)'},{transform:'translateX(140px) rotate(14deg)'}],{duration:500,easing:'ease-in'});
+  $('thumb').setAttribute('opacity','1');
+  await anim('armR',[{transform:'rotate(0)'},{transform:'rotate(-35deg)'}],{duration:300});
+  mouth('mSmile'); say('Fine. Go.'); haptic();
+}
+
+function haptic(strong){ try{ navigator.vibrate && navigator.vibrate(strong?[30,40,30]:20) }catch(e){} }
+
+/* ============ session flow ============ */
+let session, busy = false;
+async function attempt(){
+  if(busy) return; busy = true;
+  $('again').classList.add('hidden');
+  resetPose();
+  if(session.played >= session.n){
+    await release();
+    session.released = true; store.set('gremlin_session', session);
+    $('go').classList.remove('hidden'); $('emergency').classList.add('hidden');
+  } else {
+    const gag = GAGS[session.played % GAGS.length];
+    session.played++; session.last = Date.now(); store.set('gremlin_session', session);
+    await gag();
+    $('again').classList.remove('hidden');
+  }
+  busy = false;
+}
+
+function startBlock(app, testMode){
+  $('home').classList.add('hidden'); $('block').classList.remove('hidden');
+  let s = store.get('gremlin_session', null);
+  const expired = testMode || !s || s.released || (Date.now() - (s.last||s.start)) > SESSION_EXPIRY_MIN*60000;
+  if(expired){
+    if(s && !s.released) log({t:s.last||s.start, app:s.app, n:s.n, played:s.played, outcome:'walked away'});
+    s = {start:Date.now(), last:Date.now(), app, n:rollN(), played:0, test:!!testMode};
+  }
+  session = s; store.set('gremlin_session', s);
+  if(testMode) $('homeBtn').classList.remove('hidden');
+  updateEmergency(); $('emergency').classList.remove('hidden');
+  attempt();
+}
+
+function goThrough(outcome){
+  closeSession(outcome);
+  if(session && session.test){ showHome(); return; }
+  location.href = store.get('opt_direct', false) ? 'instagram://' : RELEASE_URL;
+}
+$('again').onclick = attempt;
+$('go').onclick = () => goThrough('released');
+$('homeBtn').onclick = () => { closeSession('test closed'); showHome(); };
+
+/* emergency: press and hold 5s, max 2/day */
+function emergencyLeft(){ const e = store.get('gremlin_emergency',{day:'',used:0}); return e.day===today() ? EMERGENCY_PER_DAY - e.used : EMERGENCY_PER_DAY; }
+function updateEmergency(){ const left = emergencyLeft(); $('emText').textContent = left>0 ? `Emergency · hold 5s (${left} left today)` : '0 left today'; }
+let holdTimer, holdAnim;
+function holdStart(ev){ ev.preventDefault(); if(emergencyLeft()<=0) return;
+  holdAnim = $('emergency').querySelector('.fill').animate([{width:'0%'},{width:'100%'}],{duration:5000,fill:'forwards'});
+  holdTimer = setTimeout(async ()=>{
+    const e = store.get('gremlin_emergency',{day:'',used:0});
+    store.set('gremlin_emergency',{day:today(), used:(e.day===today()?e.used:0)+1});
+    resetPose(); say('*shrug*');
+    await anim('g',[{transform:'translateY(0)'},{transform:'translateY(-10px)'},{transform:'translateY(0)'}],{duration:400,fill:'none'});
+    goThrough('emergency');
+  },5000);
+}
+function holdEnd(){ clearTimeout(holdTimer); if(holdAnim) holdAnim.cancel(); }
+['pointerdown'].forEach(e=>$('emergency').addEventListener(e,holdStart));
+['pointerup','pointerleave','pointercancel'].forEach(e=>$('emergency').addEventListener(e,holdEnd));
+
+/* ============ home ============ */
+function showHome(){
+  $('block').classList.add('hidden'); $('home').classList.remove('hidden');
+  const l = store.get('gremlin_log', []);
+  const t = l.filter(x => new Date(x.t).toDateString()===today() && !String(x.outcome).startsWith('test'));
+  $('sBlocks').textContent = t.reduce((a,x)=>a+(x.played||0),0);
+  $('sWalked').textContent = t.filter(x=>x.outcome==='walked away').length;
+  $('hist').innerHTML = l.length ? l.slice(0,40).map(x=>`<tr><td>${new Date(x.t).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</td><td>${x.played} of ${x.n} blocks</td><td>${x.outcome}</td></tr>`).join('') : '<tr><td>No sessions yet.</td></tr>';
+  $('optStrong').checked = store.get('opt_strong', true);
+  $('optDirect').checked = store.get('opt_direct', false);
+}
+$('optStrong').onchange = e => store.set('opt_strong', e.target.checked);
+$('optDirect').onchange = e => store.set('opt_direct', e.target.checked);
+$('testBtn').onclick = () => startBlock('test', true);
+
+/* ============ boot ============ */
+const app = new URLSearchParams(location.search).get('app');
+if(app) startBlock(app, false); else showHome();
+</script>
+</body>
+</html>
